@@ -10,7 +10,7 @@ function Loader() {
     const { progress } = useProgress();
     return (
         <Html center>
-            <span className="text-white font-mono text-sm whitespace-nowrap bg-slate-800/80 px-3 py-1 rounded">
+            <span className="text-[#F8E07D] font-mono text-sm whitespace-nowrap bg-[#2A2A2A]/90 border border-[#808080] px-3 py-1 rounded">
                 Loading {progress.toFixed(0)}%
             </span>
         </Html>
@@ -24,28 +24,28 @@ const STLModel = ({ url }: { url: string }) => {
 
     return (
         <mesh geometry={geometry}>
-            {/* Standard material that reacts to light */}
-            <meshStandardMaterial color="#0ea5e9" roughness={0.3} metalness={0.4} side={THREE.DoubleSide} />
+            {/* Standard material that reacts to light, updated to the palette's blue */}
+            <meshStandardMaterial color="#FFC5D3" roughness={0.3} metalness={0.4} side={THREE.DoubleSide} />
         </mesh>
     );
 };
 
 export default function RovModelViewer() {
     return (
-        <div className="w-full h-96 bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-lg relative">
+        <div className="w-full min-w-0 h-96 bg-[#2A2A2A] rounded-xl overflow-hidden border border-[#808080] shadow-lg relative">
 
             {/* UI Overlay */}
-            <div className="absolute top-4 left-4 z-10 bg-black/50 border border-slate-600 rounded px-3 py-2">
-                <h3 className="text-white text-xs font-bold uppercase tracking-wide mb-1">ROV Orientation</h3>
-                <div className="text-slate-300 text-[10px] font-mono flex flex-col">
-                    <span><span className="text-red-500 font-bold">X</span> (Red) : Roll Axis</span>
-                    <span><span className="text-green-500 font-bold">Y</span> (Green): Yaw Axis</span>
-                    <span><span className="text-blue-500 font-bold">Z</span> (Blue): Pitch Axis</span>
+            <div className="absolute top-4 left-4 z-10 bg-[#2A2A2A]/80 border border-[#BAA85D] rounded px-3 py-2">
+                <h3 className="text-[#F8E07D] text-xs font-bold uppercase tracking-wide mb-1">ROV Orientation</h3>
+                <div className="text-[#D9D9D9] text-[10px] font-mono flex flex-col">
+                    <span><span className="text-[#BAA85D] font-bold">X</span> (Red) : Roll Axis</span>
+                    <span><span className="text-[#008702] font-bold">Y</span> (Green): Yaw Axis</span>
+                    <span><span className="text-[#2282F8] font-bold">Z</span> (Blue): Pitch Axis</span>
                 </div>
             </div>
 
             {/* Three.js Canvas */}
-            <Canvas camera={{ position: [200, 200, 200], fov: 45 }}>
+            <Canvas camera={{ position: [200, 200, 200], fov: 100 }}>
 
                 {/* Scene Lighting */}
                 <ambientLight intensity={0.6} />

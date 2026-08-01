@@ -3,6 +3,7 @@ import React from "react";
 import QRCode from "react-qr-code";
 import { useTelemetry } from "@/api/useTelemetry"; // Adjust path as needed
 
+
 export default function QRStatusBox() {
     const { telemetry } = useTelemetry();
 
@@ -14,15 +15,15 @@ export default function QRStatusBox() {
     const statusText = isValid ? "Valid" : "Invalid";
 
     return (
-        <div className="w-64 flex flex-col rounded-md overflow-hidden shadow-lg border border-slate-700 font-sans">
+        <div className="w-full flex flex-col rounded-md overflow-hidden shadow-lg border border-slate-700 font-sans">
 
             {/* Heading with yellow background */}
-            <div className="bg-yellow-400 text-slate-900 font-bold p-3 text-center uppercase tracking-wide text-sm">
+            <div className="bg-[#F8E07D] text-black font-bold p-3 text-center uppercase tracking-wide text-sm">
                 QR Code & Status
             </div>
 
             {/* Square Gray Content Box */}
-            <div className="bg-slate-200 aspect-square flex flex-col items-center justify-center p-4">
+            <div className="bg-[#D9D9D9] aspect-square flex flex-col items-center justify-center p-4">
 
                 {/* QR Code / Placeholder Container */}
                 <div className="w-50 h-50 flex items-center justify-center rounded mb-4 p-2">
@@ -47,15 +48,15 @@ export default function QRStatusBox() {
                 </div>
 
                 {/* Text Details */}
-                <div className="w-full text-left text-slate-800 text-sm font-medium space-y-1 px-2">
+                <div className="w-full text-center text-black text-md font-medium space-y-1 px-2">
                     <p>
-                        <span className="text-slate-500 mr-1">Status:</span>
+                        <span className="mr-1">Status:</span>
                         <span className={isValid ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
                             {statusText}
                         </span>
                     </p>
                     <p>
-                        <span className="text-slate-500 mr-1">Side detected:</span>
+                        <span className="text-black mr-1">Side detected:</span>
                         <span className="font-bold">{qrSide}</span>
                     </p>
                 </div>

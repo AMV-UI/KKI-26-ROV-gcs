@@ -10,7 +10,8 @@ service Server {
 
 enum Mode {
   MANUAL = 0;
-  AUTONOMOUS = 1;
+  STABILIZE = 1;
+  DEPTH_HOLD = 2;
 }
 
 enum Side {
@@ -29,8 +30,8 @@ message telemetryResponse {
   google.protobuf.Timestamp timestamp = 5;
   Side qr_side = 6;
   float depth = 7;
-  bool fc_status = 8;
-  bool sensor_status = 9;
+  bool fc_cpu_load = 8;
+  bool fc_gyro_health = 9;
   float rollspeed = 10;
   float pitchspeed = 11;
   float yawspeed = 12;
@@ -47,4 +48,8 @@ message telemetryResponse {
   uint32 mot4_eff = 23;
   uint32 mot5_eff = 24;
   uint32 mot6_eff = 25;
+  bool fc_acc_health = 26;
+  bool fc_compass_health = 27;
+  bool fc_baro_health = 28;
+  bool armed = 29;
 }
