@@ -2,7 +2,7 @@
 
 import { useCameraStream } from "../api/camera";
 
-const STREAMS = ["live/frontcam"];
+const STREAMS = ["live/frontcam", "live/bottomcam"];
 
 export default function VideoPlayer() {
     const {
