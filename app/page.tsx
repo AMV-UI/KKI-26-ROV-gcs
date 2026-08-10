@@ -41,11 +41,11 @@ export default function HomePage() {
                   Uses a 3-column grid. Video takes up 2 columns (wider), QR code takes 1 column.
                 */}
                     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+
                         {/* Cameras */}
                         <div className="xl:col-span-4 w-full flex justify-center items-start">
                             <VideoPlayer />
                         </div>
-
                         {/* QR Code */}
                         <div className="xl:col-span-1 w-full flex justify-center items-start">
                             <QRStatusBox />
@@ -94,3 +94,4 @@ export default function HomePage() {
         </TelemetryProvider>
     );
 }
+

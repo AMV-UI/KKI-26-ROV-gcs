@@ -32,6 +32,7 @@ const DEFAULT_TELEMETRY = {
     fc_compass_health: false,
     fc_baro_health: false,
     armed: false,
+    servo_effort: 1500
 };
 // ------------------------------------------
 

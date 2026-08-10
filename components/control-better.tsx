@@ -8,7 +8,7 @@ export default function SystemDiagnostics() {
     // Safely fallback to 0 if the backend hasn't streamed data yet
     const data = telemetry || {
         forward_rc: 0, lateral_rc: 0, vertical_rc: 0, yaw_rc: 0,
-        mot1_eff: 0, mot2_eff: 0, mot3_eff: 0, mot4_eff: 0, mot5_eff: 0, mot6_eff: 0
+        mot1_eff: 0, mot2_eff: 0, mot3_eff: 0, mot4_eff: 0, mot5_eff: 0, mot6_eff: 0, servo_effort: 0
     };
 
     return (
@@ -38,6 +38,11 @@ export default function SystemDiagnostics() {
                     <li className="flex justify-between bg-[#808080]/20 px-3 py-2 rounded">
                         <span className="text-[#D9D9D9]">Yaw</span>
                         <span className="text-[#2282F8] font-semibold">{data.yaw_rc}</span>
+                    </li>
+
+                    <li className="flex justify-between bg-[#808080]/20 px-3 py-2 rounded">
+                        <span className="text-[#D9D9D9]">Servo</span>
+                        <span className="text-[#2282F8] font-semibold">{data.servo_effort}</span>
                     </li>
                 </ul>
             </div>

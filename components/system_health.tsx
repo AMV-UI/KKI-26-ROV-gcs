@@ -26,6 +26,22 @@ const StatusRow = ({
     </li>
 );
 
+
+const StringDataRow = ({
+    label,
+    status,
+}: {
+    label: string,
+    status: string,
+}) => (
+    <li className="flex justify-between items-center bg-[#808080]/20 px-3 py-2 rounded border border-transparent">
+        <span className="text-[#D9D9D9]">{label}</span>
+        <span className={`font-semibold ${status}`}>
+            {status}
+        </span>
+    </li>
+);
+
 export default function SystemHealth() {
     const { telemetry } = useTelemetry();
     const [lastLogTime, setLastLogTime] = useState<string>("Loading...");
@@ -49,6 +65,8 @@ export default function SystemHealth() {
         fc_compass_health: false,
         fc_baro_health: false,
         armed: false,
+        mode: "MANUAL",
+
     };
 
     return (
@@ -95,6 +113,11 @@ export default function SystemHealth() {
                 <StatusRow
                     label="Barometer"
                     status={data.fc_baro_health}
+                />
+
+                <StringDataRow
+                    label="Mode"
+                    status={data.mode}
                 />
 
                 {/* Dummy Battery Row */}

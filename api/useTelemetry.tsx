@@ -29,7 +29,9 @@ export interface TelemetryData {
     fc_compass_health: boolean;
     fc_baro_health: boolean;
     armed: boolean;
+    servo_effort: number;
 }
+
 
 interface TelemetryContextType {
     telemetry: TelemetryData | null;
