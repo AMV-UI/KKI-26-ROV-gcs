@@ -47,9 +47,9 @@ export async function GET(req: Request) {
 
             // Track consecutive failures for backoff & optional abort
             let consecutiveFailures = 0;
-            const MAX_RETRIES = 10;          // stop after this many failures
-            const BASE_DELAY_MS = 2000;       // start at 2 seconds
-            const MAX_DELAY_MS = 30000;       // cap at 30 seconds
+            const MAX_RETRIES = 10;
+            const BASE_DELAY_MS = 1000;
+            const MAX_DELAY_MS = 2000;
 
             // Immediately push default values so the UI shows something
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(DEFAULT_TELEMETRY)}\n\n`));

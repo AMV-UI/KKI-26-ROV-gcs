@@ -5,6 +5,7 @@ const REPLAY_BASE_URL = "http://127.0.0.1:9996/get";
 export function useCameraStream(streamPaths: string[]) {
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
     const webrtcRefs = useRef<(RTCPeerConnection | null)[]>([]);
+    const reconnectTimeouts = useRef<NodeJS.Timeout[]>([]); // Track timeouts for cleanup
 
     const [isLive, setIsLive] = useState(true);
     const [sliderValue, setSliderValue] = useState(0);
@@ -14,6 +15,7 @@ export function useCameraStream(streamPaths: string[]) {
     const seekOffsetRef = useRef<number>(0);
     const isDraggingRef = useRef<boolean>(false);
 
+    // --- History Fetching Effect (Remains Unchanged) ---
     useEffect(() => {
         let pollInterval: NodeJS.Timeout;
         const API_URL = `/media-api/v3/recordings/list?path=${streamPaths[0]}`;
@@ -51,8 +53,14 @@ export function useCameraStream(streamPaths: string[]) {
     }, [isLive, streamPaths]);
 
     useEffect(() => {
-        webrtcRefs.current.forEach(pc => pc?.close());
-        webrtcRefs.current = [];
+        const cleanup = () => {
+            webrtcRefs.current.forEach(pc => pc?.close());
+            webrtcRefs.current = [];
+            reconnectTimeouts.current.forEach(clearTimeout);
+            reconnectTimeouts.current = [];
+        };
+
+        cleanup();
 
         if (isLive) {
             startLiveStream();
@@ -60,44 +68,70 @@ export function useCameraStream(streamPaths: string[]) {
             startReplayStream(sliderValue);
         }
 
-        return () => {
-            webrtcRefs.current.forEach(pc => pc?.close());
-        };
+        return cleanup;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLive]);
+    }, [isLive, streamPaths]);
 
-    const startLiveStream = () => {
-        streamPaths.forEach(async (path, index) => {
-            const pc = new RTCPeerConnection({
-                iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-            });
-            webrtcRefs.current[index] = pc;
+    // --- Live Stream Reconnection Logic ---
+    const connectLiveStream = async (path: string, index: number) => {
+        // Ensure old connections and timers are cleared before trying again
+        if (reconnectTimeouts.current[index]) clearTimeout(reconnectTimeouts.current[index]);
+        if (webrtcRefs.current[index]) webrtcRefs.current[index]?.close();
 
-            pc.ontrack = (event) => {
-                const videoEl = videoRefs.current[index];
-                if (videoEl && videoEl.srcObject !== event.streams[0]) {
-                    videoEl.srcObject = event.streams[0];
-                }
-            };
+        const pc = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        });
+        webrtcRefs.current[index] = pc;
 
+        pc.ontrack = (event) => {
+            const videoEl = videoRefs.current[index];
+            if (videoEl && videoEl.srcObject !== event.streams[0]) {
+                videoEl.srcObject = event.streams[0];
+            }
+        };
+
+        // Trigger reconnect if the WebRTC connection drops mid-stream
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                console.warn(`WebRTC disconnected for ${path}. Reconnecting in 3s...`);
+                reconnectTimeouts.current[index] = setTimeout(() => {
+                    if (isLive) connectLiveStream(path, index);
+                }, 3000);
+            }
+        };
+
+        try {
             pc.addTransceiver("video", { direction: "recvonly" });
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
 
-            try {
-                const response = await fetch(`/media-api/${path}/whep`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/sdp" },
-                    body: offer.sdp,
-                });
-                const answerSdp = await response.text();
-                await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
-            } catch (err) {
-                console.error(`WHEP connection failed for ${path}:`, err);
-            }
+            const response = await fetch(`/media-api/${path}/whep`, {
+                method: "POST",
+                headers: { "Content-Type": "application/sdp" },
+                body: offer.sdp,
+            });
+
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const answerSdp = await response.text();
+            await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+            console.log(`Connected to ${path}`);
+        } catch (err) {
+            console.error(`WHEP connection failed for ${path}:`, err);
+            // Trigger reconnect if the initial WHEP API request fails
+            reconnectTimeouts.current[index] = setTimeout(() => {
+                if (isLive) connectLiveStream(path, index);
+            }, 3000);
+        }
+    };
+
+    const startLiveStream = () => {
+        streamPaths.forEach((path, index) => {
+            connectLiveStream(path, index);
         });
     };
 
+    // --- Replay Logic (Remains Unchanged) ---
     const startReplayStream = (offsetSeconds: number) => {
         if (!recordingStartRef.current) return;
 

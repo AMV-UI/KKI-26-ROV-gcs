@@ -66,7 +66,6 @@ export default function SystemHealth() {
         fc_baro_health: false,
         armed: false,
         mode: "MANUAL",
-
     };
 
     return (
@@ -128,6 +127,14 @@ export default function SystemHealth() {
                     </span>
                 </li>
             </ul>
+
+            {/* Barometer Fault Warning */}
+            {!data.fc_baro_health && (
+                <div className="mb-4 bg-red-500/10 border border-red-500/50 rounded px-3 py-2 text-xs font-mono text-red-400 flex items-start gap-2 shadow-sm">
+                    <span className="font-bold text-red-500">⚠ WARN:</span>
+                    <span>Barometer fault. ALT_HOLD and DEPTH HOLD modes are unavailable.</span>
+                </div>
+            )}
 
             {/* Dummy Last Log Saved Footer */}
             <div className="mt-auto pt-3 border-t border-[#808080]/50 flex justify-between items-center text-xs font-mono">

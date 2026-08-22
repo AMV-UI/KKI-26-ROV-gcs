@@ -15,21 +15,28 @@ const pwmToVelocity = (pwm: number | undefined, maxSpeed: number) => {
     const DEADBAND = 30;
     const RANGE = 400;
 
-    const diff = (pwm - NEUTRAL)
+    const diff = (pwm - NEUTRAL);
     if (Math.abs(diff) < DEADBAND) return 0;
 
     return (diff / RANGE) * maxSpeed;
 };
 
-const PathRenderer = ({ telemetryRef }: { telemetryRef: React.MutableRefObject<any> }) => {
+const PathRenderer = ({
+    telemetryRef,
+    isCentered
+}: {
+    telemetryRef: React.MutableRefObject<any>;
+    isCentered: boolean;
+}) => {
     const currentPosition = useRef(new THREE.Vector3(0, 0, 0));
+    const previousPosition = useRef(new THREE.Vector3(0, 0, 0)); // Track previous position for camera displacement
     const timeSinceLastPoint = useRef(0);
     const pointBuffer = useRef<THREE.Vector3[]>([new THREE.Vector3(0, 0, 0)]);
     const [linePoints, setLinePoints] = useState<THREE.Vector3[]>([new THREE.Vector3(0, 0, 0)]);
 
     const markerRef = useRef<THREE.Group>(null);
 
-    useFrame((_, delta) => {
+    useFrame((state, delta) => {
         const data = telemetryRef.current;
         if (!data) return;
 
@@ -59,6 +66,24 @@ const PathRenderer = ({ telemetryRef }: { telemetryRef: React.MutableRefObject<a
             markerRef.current.position.copy(currentPosition.current);
             markerRef.current.rotation.copy(euler);
         }
+
+        // --- CAMERA CENTERING LOGIC ---
+        // We use state.controls (provided by OrbitControls makeDefault) 
+        if (isCentered && state.controls) {
+            // Calculate how much the ROV moved this frame
+            const displacement = currentPosition.current.clone().sub(previousPosition.current);
+
+            // Move the camera by the same amount so it physically follows
+            state.camera.position.add(displacement);
+
+            // Snap the camera target (look at point) to the ROV
+            const controls = state.controls as any;
+            controls.target.copy(currentPosition.current);
+            controls.update();
+        }
+
+        // Update previous position for the next frame
+        previousPosition.current.copy(currentPosition.current);
 
         timeSinceLastPoint.current += delta;
         if (timeSinceLastPoint.current >= UPDATE_RATE_SEC) {
@@ -98,6 +123,7 @@ const PathRenderer = ({ telemetryRef }: { telemetryRef: React.MutableRefObject<a
 
 export default function TrajectoryGraph() {
     const { telemetry } = useTelemetry();
+    const [isCentered, setIsCentered] = useState(false); // Add state for toggle
 
     // We must pass telemetry into a ref to avoid a stale closure inside useFrame
     const telemetryRef = useRef(telemetry);
@@ -109,14 +135,23 @@ export default function TrajectoryGraph() {
         <div className="w-full min-w-0 h-96 bg-[#2A2A2A] rounded-xl overflow-hidden border border-[#808080] shadow-lg relative flex flex-col">
 
             {/* UI Overlay */}
+            {/* Added pointer-events-none to the wrapper, so clicks pass through to the 3D canvas... */}
             <div className="absolute top-4 left-4 z-10 bg-[#2A2A2A]/80 border border-[#BAA85D] rounded px-3 py-2 pointer-events-none">
                 <h3 className="text-[#F8E07D] text-xs font-bold uppercase tracking-wide mb-1">
                     Trajectory Estimate
                 </h3>
                 <div className="text-[#D9D9D9] text-[10px] font-mono flex flex-col">
                     <span>Dead Reckoning (IMU + Vel)</span>
-                    <span className="text-[#008702] font-bold mt-1">Buffer: {MAX_POINTS} pts</span>
+                    <span className="text-[#008702] font-bold mt-1 mb-2">Buffer: {MAX_POINTS} pts</span>
                 </div>
+
+                {/* ...but added pointer-events-auto to the button so it can be clicked */}
+                <button
+                    onClick={() => setIsCentered(!isCentered)}
+                    className="w-full py-1.5 px-2 bg-[#BAA85D] hover:bg-[#F8E07D] text-[#2A2A2A] text-[10px] font-bold rounded pointer-events-auto transition-colors"
+                >
+                    {isCentered ? "UNCENTER CAMERA" : "CENTER ON ROV"}
+                </button>
             </div>
 
             {/* Render Canvas */}
@@ -134,7 +169,7 @@ export default function TrajectoryGraph() {
 
                     <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
 
-                    <PathRenderer telemetryRef={telemetryRef} />
+                    <PathRenderer telemetryRef={telemetryRef} isCentered={isCentered} />
                 </Canvas>
             </div>
 
